@@ -1,0 +1,481 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2487.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="es"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="apple-mobile-web-app-capable" content="yes"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="apple-mobile-web-app-status-bar-style" content="default"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="apple-mobile-web-app-title" content="Mis Facturas"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Rastreador de Facturas&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>@keyframes slideIn {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>from { opacity: 0; transform: translateY(-10px); }</p>
+<p class="p1"><span class="Apple-converted-space">            </span>to { opacity: 1; transform: translateY(0); }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.animate-slide-in { animation: slideIn 0.3s ease-out; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="app"&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const STORAGE_KEY = 'bill_tracker_data';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let appState = {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>bills: [],</p>
+<p class="p1"><span class="Apple-converted-space">            </span>showAddForm: false,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>editingBill: null,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>formData: {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>companyName: '',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>accountNumber: '',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>amount: '',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>dueDate: '',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>paymentType: 'manual',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>category: 'utilities'</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function loadData() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const saved = localStorage.getItem(STORAGE_KEY);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (saved) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>appState.bills = JSON.parse(saved);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>} catch (e) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>console.error('Error loading data:', e);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function saveData() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>localStorage.setItem(STORAGE_KEY, JSON.stringify(appState.bills));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function getDaysUntilDue(dueDate) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const today = new Date();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>today.setHours(0, 0, 0, 0);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const due = new Date(dueDate);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>due.setHours(0, 0, 0, 0);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const diffTime = due - today;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return Math.ceil(diffTime / (1000 * 60 * 60 * 24));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function formatDate(dateString) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const date = new Date(dateString);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return date.toLocaleDateString('es-MX', {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>day: '2-digit',<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>month: 'short',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>year: 'numeric'</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function getOverdueBills() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return appState.bills.filter(bill =&gt; getDaysUntilDue(bill.dueDate) &lt; 0)</p>
+<p class="p1"><span class="Apple-converted-space">                </span>.sort((a, b) =&gt; new Date(a.dueDate) - new Date(b.dueDate));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function getUrgentBills() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return appState.bills.filter(bill =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const days = getDaysUntilDue(bill.dueDate);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return days &gt;= 0 &amp;&amp; days &lt;= 4;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}).sort((a, b) =&gt; getDaysUntilDue(a.dueDate) - getDaysUntilDue(b.dueDate));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function getUpcomingBills() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return appState.bills.filter(bill =&gt; getDaysUntilDue(bill.dueDate) &gt; 4)</p>
+<p class="p1"><span class="Apple-converted-space">                </span>.sort((a, b) =&gt; new Date(a.dueDate) - new Date(b.dueDate));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function getTotalAmount(bills) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return bills.reduce((sum, bill) =&gt; sum + parseFloat(bill.amount), 0);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function handleInputChange(e) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>appState.formData[e.target.name] = e.target.value;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function handleSubmit(e) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>e.preventDefault();</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!appState.formData.companyName || !appState.formData.amount || !appState.formData.dueDate) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>alert('Por favor completa todos los campos obligatorios');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const newBill = {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>id: appState.editingBill ? appState.editingBill.id : Date.now(),</p>
+<p class="p1"><span class="Apple-converted-space">                </span>companyName: appState.formData.companyName,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>accountNumber: appState.formData.accountNumber,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>amount: appState.formData.amount,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>dueDate: appState.formData.dueDate,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>paymentType: appState.formData.paymentType,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>category: appState.formData.category,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>createdAt: appState.editingBill ? appState.editingBill.createdAt : new Date().toISOString()</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (appState.editingBill) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const index = appState.bills.findIndex(b =&gt; b.id === appState.editingBill.id);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>appState.bills[index] = newBill;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>appState.bills.push(newBill);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>saveData();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>resetForm();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function resetForm() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>appState.formData = {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>companyName: '',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>accountNumber: '',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>amount: '',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>dueDate: '',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>paymentType: 'manual',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>category: 'utilities'</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p1"><span class="Apple-converted-space">            </span>appState.showAddForm = false;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>appState.editingBill = null;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function handleEdit(bill) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>appState.formData = {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>companyName: bill.companyName,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>accountNumber: bill.accountNumber,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>amount: bill.amount,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>dueDate: bill.dueDate,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>paymentType: bill.paymentType,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>category: bill.category</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p1"><span class="Apple-converted-space">            </span>appState.editingBill = bill;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>appState.showAddForm = true;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>window.scrollTo({ top: 0, behavior: 'smooth' });</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function handleDelete(id) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (confirm('¿Estás seguro de eliminar esta factura?')) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>appState.bills = appState.bills.filter(bill =&gt; bill.id !== id);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>saveData();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function toggleAddForm() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>appState.showAddForm = !appState.showAddForm;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!appState.showAddForm) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>resetForm();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const icons = {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>utilities: '💡',</p>
+<p class="p1"><span class="Apple-converted-space">            </span>credit: '💳',</p>
+<p class="p1"><span class="Apple-converted-space">            </span>insurance: '🛡️',</p>
+<p class="p1"><span class="Apple-converted-space">            </span>subscription: '📱',</p>
+<p class="p1"><span class="Apple-converted-space">            </span>rent: '🏠',</p>
+<p class="p1"><span class="Apple-converted-space">            </span>other: '📄'</p>
+<p class="p1"><span class="Apple-converted-space">        </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const categoryNames = {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>utilities: 'Servicios',</p>
+<p class="p1"><span class="Apple-converted-space">            </span>credit: 'Tarjeta de Crédito',</p>
+<p class="p1"><span class="Apple-converted-space">            </span>insurance: 'Seguro',</p>
+<p class="p1"><span class="Apple-converted-space">            </span>subscription: 'Suscripción',</p>
+<p class="p1"><span class="Apple-converted-space">            </span>rent: 'Renta/Hipoteca',</p>
+<p class="p1"><span class="Apple-converted-space">            </span>other: 'Otro'</p>
+<p class="p1"><span class="Apple-converted-space">        </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function renderBillCard(bill, status) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const daysUntil = getDaysUntilDue(bill.dueDate);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let borderColor = 'border-gray-200';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let bgColor = 'bg-white';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let daysText = '';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let daysColor = 'text-gray-600';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (status === 'overdue') {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>borderColor = 'border-red-300';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>bgColor = 'bg-red-50';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>daysText = `Vencida hace ${Math.abs(daysUntil)} día${Math.abs(daysUntil) !== 1 ? 's' : ''}`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>daysColor = 'text-red-700 font-bold';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else if (status === 'urgent') {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>borderColor = 'border-yellow-300';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>bgColor = 'bg-yellow-50';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>daysText = daysUntil === 0 ? '¡Vence HOY!' : `Vence en ${daysUntil} día${daysUntil !== 1 ? 's' : ''}`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>daysColor = 'text-yellow-700 font-bold';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>daysText = `Vence en ${daysUntil} días`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>daysColor = 'text-gray-600';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>return `</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="${bgColor} border-2 ${borderColor} rounded-xl p-4 shadow-sm hover:shadow-md transition animate-slide-in"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="flex items-start justify-between"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="flex items-center gap-2 mb-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;span class="text-2xl"&gt;${icons[bill.category]}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;h3 class="font-bold text-gray-800 text-lg"&gt;${bill.companyName}&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;p class="text-sm text-gray-500"&gt;${categoryNames[bill.category]}&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                            </span></p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="grid grid-cols-2 gap-3 mt-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="flex items-center gap-2 text-sm"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;span class="text-green-600"&gt;💵&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;div class="text-gray-500 text-xs"&gt;Monto&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;div class="font-semibold text-gray-800"&gt;$${parseFloat(bill.amount).toFixed(2)}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                                </span></p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="flex items-center gap-2 text-sm"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;span class="text-blue-600"&gt;📅&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;div class="text-gray-500 text-xs"&gt;Vencimiento&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;div class="font-semibold text-gray-800"&gt;${formatDate(bill.dueDate)}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                                </span></p>
+<p class="p1"><span class="Apple-converted-space">                                </span>${bill.accountNumber ? `</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="flex items-center gap-2 text-sm"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;span class="text-indigo-600"&gt;🏢&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;div class="text-gray-500 text-xs"&gt;Cuenta&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;div class="font-semibold text-gray-800"&gt;${bill.accountNumber}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>` : ''}</p>
+<p class="p2"><span class="Apple-converted-space">                                </span></p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="flex items-center gap-2 text-sm"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;span class="text-purple-600"&gt;💳&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;div class="text-gray-500 text-xs"&gt;Pago&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;div class="font-semibold text-gray-800"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                            </span>${bill.paymentType === 'automatic' ? 'Automático' : 'Manual'}</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                            </span></p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="mt-3 text-sm ${daysColor}"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>${daysText}</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                        </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex flex-col gap-2 ml-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button onclick="handleEdit(${JSON.stringify(bill).replace(/"/g, '&amp;quot;')})"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>title="Editar"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>✏️</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button onclick="handleDelete(${bill.id})"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>class="p-2 text-red-600 hover:bg-red-100 rounded-lg transition"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>title="Eliminar"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>🗑️</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function render() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const overdueBills = getOverdueBills();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const urgentBills = getUrgentBills();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const upcomingBills = getUpcomingBills();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('app').innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="p-4 pb-20 max-w-4xl mx-auto"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="bg-white rounded-2xl shadow-lg p-6 mb-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex items-center justify-between mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;h1 class="text-3xl font-bold text-gray-800 flex items-center gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>💰 Mis Facturas</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;p class="text-gray-600 mt-1"&gt;Administra tus pagos y facturas&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button onclick="toggleAddForm()"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>class="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700 transition"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>➕ Agregar</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="bg-red-50 p-4 rounded-lg border-2 border-red-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="text-red-600 text-sm font-semibold"&gt;Vencidas&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="text-2xl font-bold text-red-700"&gt;${overdueBills.length}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="text-red-600 text-sm"&gt;$${getTotalAmount(overdueBills).toFixed(2)}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="text-yellow-700 text-sm font-semibold"&gt;Próximas (≤4 días)&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="text-2xl font-bold text-yellow-800"&gt;${urgentBills.length}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="text-yellow-700 text-sm"&gt;$${getTotalAmount(urgentBills).toFixed(2)}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="bg-green-50 p-4 rounded-lg border-2 border-green-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="text-green-700 text-sm font-semibold"&gt;Futuras&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="text-2xl font-bold text-green-800"&gt;${upcomingBills.length}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="text-green-700 text-sm"&gt;$${getTotalAmount(upcomingBills).toFixed(2)}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>${appState.showAddForm ? `</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slide-in"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h2 class="text-xl font-bold text-gray-800 mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>${appState.editingBill ? 'Editar Factura' : 'Nueva Factura'}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="space-y-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="grid md:grid-cols-2 gap-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;label class="block text-sm font-medium text-gray-700 mb-1"&gt;Nombre de la Compañía *&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;input type="text" name="companyName" value="${appState.formData.companyName}"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                                           </span>onchange="handleInputChange(event)"</p>
+<p class="p1"><span class="Apple-converted-space">                                           </span>class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;label class="block text-sm font-medium text-gray-700 mb-1"&gt;Número de Cuenta/Contrato&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;input type="text" name="accountNumber" value="${appState.formData.accountNumber}"</p>
+<p class="p1"><span class="Apple-converted-space">                                           </span>onchange="handleInputChange(event)"</p>
+<p class="p1"><span class="Apple-converted-space">                                           </span>class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;label class="block text-sm font-medium text-gray-700 mb-1"&gt;Monto a Pagar *&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;input type="number" name="amount" value="${appState.formData.amount}" step="0.01"</p>
+<p class="p1"><span class="Apple-converted-space">                                           </span>onchange="handleInputChange(event)"</p>
+<p class="p1"><span class="Apple-converted-space">                                           </span>class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;label class="block text-sm font-medium text-gray-700 mb-1"&gt;Fecha de Vencimiento *&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;input type="date" name="dueDate" value="${appState.formData.dueDate}"</p>
+<p class="p1"><span class="Apple-converted-space">                                           </span>onchange="handleInputChange(event)"</p>
+<p class="p1"><span class="Apple-converted-space">                                           </span>class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;label class="block text-sm font-medium text-gray-700 mb-1"&gt;Tipo de Pago&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;select name="paymentType" value="${appState.formData.paymentType}"</p>
+<p class="p1"><span class="Apple-converted-space">                                            </span>onchange="handleInputChange(event)"</p>
+<p class="p1"><span class="Apple-converted-space">                                            </span>class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;option value="manual" ${appState.formData.paymentType === 'manual' ? 'selected' : ''}&gt;Manual&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;option value="automatic" ${appState.formData.paymentType === 'automatic' ? 'selected' : ''}&gt;Automático&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;label class="block text-sm font-medium text-gray-700 mb-1"&gt;Categoría&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;select name="category" value="${appState.formData.category}"</p>
+<p class="p1"><span class="Apple-converted-space">                                            </span>onchange="handleInputChange(event)"</p>
+<p class="p1"><span class="Apple-converted-space">                                            </span>class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;option value="utilities" ${appState.formData.category === 'utilities' ? 'selected' : ''}&gt;Servicios (luz, agua, gas)&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;option value="credit" ${appState.formData.category === 'credit' ? 'selected' : ''}&gt;Tarjeta de Crédito&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;option value="insurance" ${appState.formData.category === 'insurance' ? 'selected' : ''}&gt;Seguro&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;option value="subscription" ${appState.formData.category === 'subscription' ? 'selected' : ''}&gt;Suscripción&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;option value="rent" ${appState.formData.category === 'rent' ? 'selected' : ''}&gt;Renta/Hipoteca&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;option value="other" ${appState.formData.category === 'other' ? 'selected' : ''}&gt;Otro&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="flex gap-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;button onclick="handleSubmit(event)"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>✓ ${appState.editingBill ? 'Guardar Cambios' : 'Agregar Factura'}</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;button onclick="resetForm(); render();"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>✕ Cancelar</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>` : ''}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>${overdueBills.length &gt; 0 ? `</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg animate-slide-in"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex items-start"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span class="text-red-500 text-2xl mr-3"&gt;⚠️&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;h3 class="text-red-800 font-bold text-lg"&gt;¡Facturas Vencidas!&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;p class="text-red-700"&gt;Tienes ${overdueBills.length} factura(s) vencida(s) por pagar&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>` : ''}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>${urgentBills.length &gt; 0 ? `</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 rounded-lg animate-slide-in"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex items-start"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span class="text-yellow-600 text-2xl mr-3"&gt;⏰&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;h3 class="text-yellow-800 font-bold text-lg"&gt;¡Próximos Pagos!&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;p class="text-yellow-700"&gt;Tienes ${urgentBills.length} factura(s) que vencen en los próximos 4 días&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>` : ''}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>${appState.bills.length === 0 ? `</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="bg-white rounded-2xl shadow-lg p-12 text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="text-6xl mb-4"&gt;💰&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h3 class="text-xl font-semibold text-gray-600 mb-2"&gt;No hay facturas registradas&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;p class="text-gray-500"&gt;Haz clic en "Agregar" para registrar tu primera factura&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>` : `</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="space-y-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>${overdueBills.length &gt; 0 ? `</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h2 class="text-lg font-bold text-red-700 mb-3 flex items-center gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>⚠️ Vencidas</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="space-y-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>${overdueBills.map(bill =&gt; renderBillCard(bill, 'overdue')).join('')}</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>` : ''}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>${urgentBills.length &gt; 0 ? `</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h2 class="text-lg font-bold text-yellow-700 mb-3 flex items-center gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>⏰ Próximas (4 días o menos)</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="space-y-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>${urgentBills.map(bill =&gt; renderBillCard(bill, 'urgent')).join('')}</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>` : ''}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>${upcomingBills.length &gt; 0 ? `</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h2 class="text-lg font-bold text-gray-700 mb-3 flex items-center gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>📅 Próximas Facturas</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="space-y-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>${upcomingBills.map(bill =&gt; renderBillCard(bill, 'upcoming')).join('')}</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>` : ''}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>`}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>loadData();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
