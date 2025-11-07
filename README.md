@@ -1,2 +1,2 @@
 # mis-facturas
-App the control de pago de Facturas
+App control de pago de Facturas
